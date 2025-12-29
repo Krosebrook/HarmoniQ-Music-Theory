@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { NoteName, ProgressionStep } from '../types';
+import { NoteName, ProgressionStep, ProgressionTemplate } from '../types';
 import { suggestProgression } from '../services/gemini';
-import { NOTES } from '../constants';
+import { NOTES, PROGRESSION_TEMPLATES } from '../constants';
 
 interface ProgressionLabProps {
   currentKey: NoteName;
@@ -19,6 +19,7 @@ export const ProgressionLab: React.FC<ProgressionLabProps> = ({
 }) => {
   const [mood, setMood] = useState('Epic');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const moods = ['Epic', 'Melancholic', 'Dreamy', 'Dark Jazz', 'Uplifting Pop', 'Soulful', 'Cyberpunk'];
 
@@ -34,6 +35,20 @@ export const ProgressionLab: React.FC<ProgressionLabProps> = ({
     }
   };
 
+  const applyTemplate = (template: ProgressionTemplate) => {
+    const rootIndex = NOTES.indexOf(currentKey);
+    const steps: ProgressionStep[] = template.steps.map(s => {
+      const noteIdx = (rootIndex + s.degree) % 12;
+      return {
+        root: NOTES[noteIdx] as NoteName,
+        variety: s.variety,
+        numeral: s.numeral
+      };
+    });
+    setProgression(steps);
+    setShowTemplates(false);
+  };
+
   const clearProgression = () => setProgression([]);
 
   return (
@@ -42,10 +57,23 @@ export const ProgressionLab: React.FC<ProgressionLabProps> = ({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div>
             <h2 className="text-2xl font-bold text-white">Progression Builder</h2>
-            <p className="text-slate-400 text-sm mt-1">Generate harmonic sequences in the key of {currentKey} using AI.</p>
+            <p className="text-slate-400 text-sm mt-1">Generate harmonic sequences in the key of {currentKey} using AI or Templates.</p>
           </div>
           
           <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setShowTemplates(!showTemplates)}
+              className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all border ${
+                showTemplates 
+                ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg' 
+                : 'bg-slate-700 text-slate-300 border-slate-600 hover:bg-slate-600'
+              }`}
+            >
+              📚 Template Library
+            </button>
+
+            <div className="h-10 w-px bg-slate-700 mx-2 hidden md:block"></div>
+
             <select 
               value={mood}
               onChange={(e) => setMood(e.target.value)}
@@ -61,7 +89,7 @@ export const ProgressionLab: React.FC<ProgressionLabProps> = ({
             >
               {isGenerating ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : '✨ Generate'}
+              ) : '✨ AI Generate'}
             </button>
             
             <button
@@ -73,6 +101,22 @@ export const ProgressionLab: React.FC<ProgressionLabProps> = ({
           </div>
         </div>
 
+        {/* Template Gallery Overlay/Section */}
+        {showTemplates && (
+          <div className="mb-8 grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-slate-900/60 rounded-2xl border border-indigo-500/20 animate-in slide-in-from-top-4 duration-300">
+            {PROGRESSION_TEMPLATES.map((t, i) => (
+              <button
+                key={i}
+                onClick={() => applyTemplate(t)}
+                className="group flex flex-col p-3 rounded-xl bg-slate-800 border border-slate-700 hover:border-indigo-500 hover:bg-slate-700 transition-all text-left"
+              >
+                <span className="text-white text-xs font-bold mb-1 truncate">{t.name}</span>
+                <span className="text-slate-500 text-[9px] uppercase tracking-widest group-hover:text-indigo-400">{t.mood}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Progression Timeline */}
         <div className="min-h-[200px] bg-slate-900/50 rounded-2xl p-6 border border-slate-800 flex items-center justify-center relative overflow-hidden">
           {progression.length === 0 ? (
@@ -82,7 +126,7 @@ export const ProgressionLab: React.FC<ProgressionLabProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
               </div>
-              <p className="text-slate-500 text-sm">No sequence generated. Choose a mood and click Generate!</p>
+              <p className="text-slate-500 text-sm">No sequence generated. Use AI or pick a Template from the library!</p>
             </div>
           ) : (
             <div className="flex gap-4 overflow-x-auto pb-4 w-full">
@@ -119,9 +163,9 @@ export const ProgressionLab: React.FC<ProgressionLabProps> = ({
           </p>
         </div>
         <div className="bg-emerald-900/10 border border-emerald-500/10 p-6 rounded-2xl">
-          <h3 className="text-emerald-400 font-bold mb-2">Key Consistency</h3>
+          <h3 className="text-emerald-400 font-bold mb-2">Library Templates</h3>
           <p className="text-slate-400 text-xs leading-relaxed">
-            All generated progressions are anchored to your selected root key ({currentKey}), ensuring tonal stability.
+            Quickly browse 10 standard musical patterns (Pop, Jazz, Blues, etc.) and apply them to any key instantly.
           </p>
         </div>
         <div className="bg-amber-900/10 border border-amber-500/10 p-6 rounded-2xl">

@@ -14,6 +14,11 @@ interface FretboardViewProps {
   currentTheory?: TheoryResult;
 }
 
+const STRINGS = ['E', 'B', 'G', 'D', 'A', 'E']; // High to Low
+const FB_HEIGHT = 160;
+const FB_WIDTH = 800;
+const FB_TOP_GUTTER = 20;
+
 export const FretboardView: React.FC<FretboardViewProps> = ({ 
   activeNotes, 
   rootNote, 
@@ -24,7 +29,6 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
   displayLabelMode = 'note',
   currentTheory
 }) => {
-  const strings = ['E', 'B', 'G', 'D', 'A', 'E']; // High to Low
   const [hoveredFret, setHoveredFret] = useState<number | null>(null);
   const [fretRange, setFretRange] = useState({ start: 0, end: 15 });
   
@@ -51,7 +55,7 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
     const reversedStringIdx = 5 - stringIdx;
     const offset = shapeOffsets[reversedStringIdx];
     if (offset === null) return null;
-    const baseFret = getRootFretOnString(strings[stringIdx]);
+    const baseFret = getRootFretOnString(STRINGS[stringIdx]);
     return baseFret + offset;
   };
 
@@ -71,14 +75,14 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
   const getXPos = (fret: number) => {
     if (fret < fretRange.start || fret > fretRange.end) return -100;
     const relativeFret = fret - fretRange.start;
-    return 48 + (relativeFret * (800 / (numFretsVisible + 1)));
+    return 48 + (relativeFret * ((FB_WIDTH - 48) / (numFretsVisible + 1)));
   };
 
   const renderLegatoPaths = () => {
     if (!showTechniques) return null;
     const paths: React.ReactNode[] = [];
     
-    strings.forEach((s, stringIdx) => {
+    STRINGS.forEach((s, stringIdx) => {
       const activeFretsOnString: number[] = [];
       const voicedFretsOnString: number[] = [];
       
@@ -100,51 +104,45 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
         if (dist > 0 && dist <= 4) {
           const x1 = getXPos(fretA);
           const x2 = getXPos(fretB);
-          const y = 16 + stringIdx * (160 / 5);
+          // Standardize Y mapping to match string positions in UI
+          const y = FB_TOP_GUTTER + stringIdx * ((FB_HEIGHT - 20) / 5);
           const midX = (x1 + x2) / 2;
-          const arcHeight = Math.min(dist * 12, 28);
+          const arcHeight = Math.min(dist * 14, 32);
           
           const isBothVoiced = voicedFretsOnString.includes(fretA) && voicedFretsOnString.includes(fretB);
-          const opacity = isBothVoiced ? 1 : 0.25;
+          const opacity = isBothVoiced ? 1 : 0.3;
           const hColor = isBothVoiced ? 'rgb(99, 102, 241)' : 'rgb(100, 116, 139)';
           const pColor = isBothVoiced ? 'rgb(139, 92, 246)' : 'rgb(71, 85, 105)';
 
-          // Hammer-on path (Ascending - Arcs Above)
+          // Hammer-on path
           paths.push(
-            <g key={`legato-h-${stringIdx}-${fretA}-${fretB}`} className="pointer-events-none transition-all duration-500" style={{ opacity }}>
+            <g key={`h-${stringIdx}-${fretA}-${fretB}`} className="transition-all duration-500" style={{ opacity }}>
               <path
-                d={`M ${x1 + 12} ${y - 6} C ${x1 + 18} ${y - arcHeight}, ${x2 - 18} ${y - arcHeight}, ${x2 - 12} ${y - 6}`}
+                d={`M ${x1 + 14} ${y - 6} C ${x1 + 20} ${y - arcHeight}, ${x2 - 20} ${y - arcHeight}, ${x2 - 14} ${y - 6}`}
                 fill="none"
                 stroke={hColor}
                 strokeWidth={isBothVoiced ? "2.5" : "1.5"}
                 markerEnd="url(#arrow-h)"
-                className={isBothVoiced ? 'drop-shadow-[0_0_10px_rgba(99,102,241,0.6)]' : ''}
+                className={isBothVoiced ? 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : ''}
               >
-                <animate 
-                  attributeName="stroke-dasharray" 
-                  from="0, 100" 
-                  to="100, 0" 
-                  dur="2s" 
-                  repeatCount="indefinite" 
-                />
+                <animate attributeName="stroke-dashoffset" from="100" to="0" dur="3s" repeatCount="indefinite" />
               </path>
-              <text x={midX} y={y - arcHeight - 4} textAnchor="middle" className={`font-mono text-[10px] font-black tracking-tighter ${isBothVoiced ? 'fill-indigo-300' : 'fill-slate-600'}`}>H</text>
+              <text x={midX} y={y - arcHeight - 4} textAnchor="middle" className={`font-mono text-[9px] font-black ${isBothVoiced ? 'fill-indigo-300' : 'fill-slate-600'}`}>H</text>
             </g>
           );
 
-          // Pull-off path (Descending - Arcs Below)
+          // Pull-off path
           paths.push(
-            <g key={`legato-p-${stringIdx}-${fretA}-${fretB}`} className="pointer-events-none transition-all duration-500" style={{ opacity: opacity * 0.8 }}>
+            <g key={`p-${stringIdx}-${fretA}-${fretB}`} className="transition-all duration-500" style={{ opacity: opacity * 0.8 }}>
               <path
-                d={`M ${x2 - 12} ${y + 6} C ${x2 - 18} ${y + arcHeight}, ${x1 + 18} ${y + arcHeight}, ${x1 + 12} ${y + 6}`}
+                d={`M ${x2 - 14} ${y + 6} C ${x2 - 20} ${y + arcHeight}, ${x1 + 20} ${y + arcHeight}, ${x1 + 14} ${y + 6}`}
                 fill="none"
                 stroke={pColor}
                 strokeWidth={isBothVoiced ? "2" : "1"}
                 strokeDasharray="4 2"
                 markerEnd="url(#arrow-p)"
-                className={isBothVoiced ? 'drop-shadow-[0_0_8px_rgba(139,92,246,0.4)]' : ''}
               />
-              <text x={midX} y={y + arcHeight + 12} textAnchor="middle" className={`font-mono text-[10px] font-black tracking-tighter ${isBothVoiced ? 'fill-violet-400' : 'fill-slate-700'}`}>P</text>
+              <text x={midX} y={y + arcHeight + 11} textAnchor="middle" className={`font-mono text-[9px] font-black ${isBothVoiced ? 'fill-violet-400' : 'fill-slate-700'}`}>P</text>
             </g>
           );
         }
@@ -152,8 +150,6 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
     });
     return paths;
   };
-
-  const handleFretHover = (f: number | null) => setHoveredFret(f);
 
   const zoomOptions = [
     { label: 'Full Neck', start: 0, end: 15 },
@@ -166,7 +162,7 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
     <div className="space-y-4">
       {/* Zoom Controls */}
       <div className="flex gap-2 items-center bg-slate-900/50 p-2 rounded-lg border border-slate-800">
-        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">Zoom:</span>
+        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">Zoom Range:</span>
         <div className="flex gap-1">
           {zoomOptions.map((opt) => (
             <button
@@ -186,7 +182,7 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
 
       <div className="bg-slate-950 rounded-xl p-4 overflow-x-auto border border-slate-800 shadow-2xl group/fretboard relative">
         <div className="relative min-w-[800px] h-72">
-          {/* Fret Highlight (Vertical Line on Hover) */}
+          {/* Fret Highlight on Hover */}
           {hoveredFret !== null && hoveredFret > fretRange.start && (
             <div 
               className="absolute top-4 bottom-14 w-12 bg-indigo-500/10 border-x border-indigo-500/20 pointer-events-none z-0 transition-all duration-100"
@@ -194,9 +190,9 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
             />
           )}
 
-          {/* Nut and Strings Background */}
+          {/* Nut Styling */}
           {fretRange.start === 0 && (
-            <div className="absolute left-12 top-4 bottom-14 w-3 bg-gradient-to-b from-slate-300 via-slate-500 to-slate-300 rounded-sm z-20 shadow-[4px_0_10px_rgba(0,0,0,0.5)] border-x border-slate-600"></div>
+            <div className="absolute left-12 top-4 bottom-14 w-3 bg-gradient-to-b from-slate-300 via-slate-500 to-slate-300 rounded-sm z-20 shadow-[2px_0_8px_rgba(0,0,0,0.5)] border-x border-slate-600"></div>
           )}
           
           <div className="flex absolute inset-0 pt-4 pb-14">
@@ -207,8 +203,8 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
                 <div 
                   key={i} 
                   className={`flex-1 h-full border-r border-slate-800/80 relative transition-colors duration-200 ${hoveredFret === currentFretNum ? 'bg-indigo-500/5' : ''}`}
-                  onMouseEnter={() => handleFretHover(currentFretNum)}
-                  onMouseLeave={() => handleFretHover(null)}
+                  onMouseEnter={() => setHoveredFret(currentFretNum)}
+                  onMouseLeave={() => setHoveredFret(null)}
                 >
                   {/* Position Markers */}
                   {[3, 5, 7, 9, 15].includes(currentFretNum) && (
@@ -216,12 +212,12 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
                   )}
                   {currentFretNum === 12 && (
                     <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-1.5">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
                     </div>
                   )}
-                  {/* Fret Number Labels */}
-                  <div className={`absolute -bottom-14 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase select-none transition-colors ${hoveredFret === currentFretNum ? 'text-indigo-400' : 'text-slate-600'}`}>
+                  {/* Fret Number Label */}
+                  <div className={`absolute -bottom-14 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase transition-colors ${hoveredFret === currentFretNum ? 'text-indigo-400' : 'text-slate-600'}`}>
                     {currentFretNum}
                   </div>
                 </div>
@@ -229,7 +225,7 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
             })}
           </div>
 
-          <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" preserveAspectRatio="none">
+          <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none" viewBox={`0 0 ${FB_WIDTH} 288`} preserveAspectRatio="xMinYMin meet">
             <defs>
               <marker id="arrow-h" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="rgb(99, 102, 241)" />
@@ -242,7 +238,7 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
           </svg>
 
           <div className="absolute top-4 left-0 right-0 bottom-14 flex flex-col justify-between py-2">
-            {strings.map((s, stringIdx) => {
+            {STRINGS.map((s, stringIdx) => {
               const reversedIdx = 5 - stringIdx;
               const isStringMuted = customAiVoicing 
                 ? customAiVoicing[reversedIdx] === null 
@@ -250,13 +246,13 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
 
               return (
                 <div key={stringIdx} className="relative h-0 flex items-center">
-                  {/* String texture */}
-                  <div className="absolute left-12 right-0 bg-gradient-to-r from-slate-400/40 via-slate-500/30 to-slate-400/40" style={{ height: `${1.4 + (stringIdx * 0.4)}px` }}></div>
-                  <div className="w-12 text-center text-[10px] font-black text-slate-500 pr-3 uppercase select-none tracking-tighter">{s}</div>
+                  {/* String Texture Rendering */}
+                  <div className="absolute left-12 right-0 bg-gradient-to-r from-slate-400/40 via-slate-500/30 to-slate-400/40 shadow-sm" style={{ height: `${1.4 + (stringIdx * 0.4)}px` }}></div>
+                  <div className="w-12 text-center text-[10px] font-black text-slate-500 pr-3 uppercase tracking-tighter select-none">{s}</div>
                   
                   {/* Muted indicator above nut */}
                   {fretRange.start === 0 && isStringMuted && (
-                    <div className="absolute left-[32px] z-40 text-red-500 font-bold text-xl -translate-y-[4px] animate-pulse drop-shadow-lg select-none">×</div>
+                    <div className="absolute left-[34px] z-40 text-red-500 font-bold text-lg -translate-y-[4px] animate-pulse drop-shadow-lg select-none">×</div>
                   )}
 
                   {Array.from({ length: numFretsVisible + 1 }).map((_, i) => {
@@ -269,17 +265,17 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
                     return (
                       <div key={fretIdx} className="absolute z-30" style={{ left: `calc(3rem + ${i * fretWidthPercent}%)` }}>
                         {isVoicingNote ? (
-                           <button className={`-translate-x-1/2 w-8 h-8 rounded-full flex flex-col items-center justify-center text-[10px] font-black shadow-[0_10px_20px_rgba(0,0,0,0.5)] border-2 transition-all hover:scale-125 hover:z-50 select-none cursor-default outline-none ${
+                           <button className={`-translate-x-1/2 w-8 h-8 rounded-full flex flex-col items-center justify-center text-[10px] font-black shadow-[0_5px_15px_rgba(0,0,0,0.5)] border-2 transition-all hover:scale-125 hover:z-50 select-none cursor-default ${
                              note === rootNote 
                                ? 'bg-indigo-600 border-white text-white ring-4 ring-indigo-500/20' 
                                : 'bg-white border-indigo-500 text-indigo-900 ring-4 ring-white/10'
-                           }`} aria-label={`${note} note`}>
+                           }`}>
                              {getLabel(note)}
                            </button>
                         ) : isTheoryNote && !selectedShape && !customAiVoicing ? (
                            <div className={`-translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all select-none border ${
                              fretIdx === 0 
-                               ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
+                               ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
                                : 'bg-slate-800/95 text-slate-400 border-slate-700 group-hover/fretboard:border-slate-600 hover:text-white hover:border-slate-400'
                            }`}>
                              {getLabel(note)}
@@ -294,9 +290,12 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
           </div>
         </div>
       </div>
-      <p className="text-[10px] text-slate-500 italic px-1">
-        * Hammer-on (H) indicated by solid paths, Pull-off (P) by dashed paths. Voiced chord tones are highlighted.
-      </p>
+      <div className="flex justify-between items-center px-1">
+        <p className="text-[10px] text-slate-500 italic">
+          * Solid paths: Hammer-on (H) • Dashed paths: Pull-off (P)
+        </p>
+        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest bg-slate-800/30 px-2 py-0.5 rounded"> Standard E-A-D-G-B-E </span>
+      </div>
     </div>
   );
 };

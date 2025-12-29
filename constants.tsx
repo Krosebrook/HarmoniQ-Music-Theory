@@ -1,4 +1,6 @@
 
+import { ProgressionTemplate } from './types';
+
 export const NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
 export const SCALES = {
@@ -30,13 +32,11 @@ export const CHORDS = {
   'Minor 9th': [0, 3, 7, 10, 14]
 };
 
-// Relative fret offsets for standard guitar shapes (CAGED-ish)
-// null means string is muted
 export const GUITAR_VOICINGS: Record<string, Record<string, (number | null)[]>> = {
   'Major': {
-    'E-Shape': [0, 2, 2, 1, 0, 0], // Root on 6th string
-    'A-Shape': [null, 0, 2, 2, 2, 0], // Root on 5th string
-    'C-Shape': [null, 3, 2, 0, 1, 0], // Root on 5th string (Open C shape)
+    'E-Shape': [0, 2, 2, 1, 0, 0],
+    'A-Shape': [null, 0, 2, 2, 2, 0],
+    'C-Shape': [null, 3, 2, 0, 1, 0],
   },
   'Minor': {
     'E-Minor-Shape': [0, 2, 2, 0, 0, 0],
@@ -51,3 +51,106 @@ export const GUITAR_VOICINGS: Record<string, Record<string, (number | null)[]>> 
     'A-Maj7-Shape': [null, 0, 2, 1, 2, 0],
   }
 };
+
+export const PROGRESSION_TEMPLATES: ProgressionTemplate[] = [
+  {
+    name: "The Pop Loop",
+    mood: "Uplifting",
+    steps: [
+      { degree: 0, variety: "Major", numeral: "I" },
+      { degree: 7, variety: "Major", numeral: "V" },
+      { degree: 9, variety: "Minor", numeral: "vi" },
+      { degree: 5, variety: "Major", numeral: "IV" }
+    ]
+  },
+  {
+    name: "Classic ii-V-I",
+    mood: "Jazzy",
+    steps: [
+      { degree: 2, variety: "Minor 7th", numeral: "ii7" },
+      { degree: 7, variety: "Dominant 7th", numeral: "V7" },
+      { degree: 0, variety: "Major 7th", numeral: "Imaj7" },
+      { degree: 0, variety: "Major 7th", numeral: "Imaj7" }
+    ]
+  },
+  {
+    name: "Epic Journey",
+    mood: "Dramatic",
+    steps: [
+      { degree: 9, variety: "Minor", numeral: "vi" },
+      { degree: 5, variety: "Major", numeral: "IV" },
+      { degree: 0, variety: "Major", numeral: "I" },
+      { degree: 7, variety: "Major", numeral: "V" }
+    ]
+  },
+  {
+    name: "Andalusian Cadence",
+    mood: "Spanish/Flamenco",
+    steps: [
+      { degree: 9, variety: "Minor", numeral: "i" },
+      { degree: 7, variety: "Major", numeral: "VII" },
+      { degree: 5, variety: "Major", numeral: "VI" },
+      { degree: 4, variety: "Major", numeral: "V" }
+    ]
+  },
+  {
+    name: "Rock Soul",
+    mood: "Gritty",
+    steps: [
+      { degree: 0, variety: "Major", numeral: "I" },
+      { degree: 10, variety: "Major", numeral: "bVII" },
+      { degree: 5, variety: "Major", numeral: "IV" },
+      { degree: 0, variety: "Major", numeral: "I" }
+    ]
+  },
+  {
+    name: "Smooth Neo-Soul",
+    mood: "Chill",
+    steps: [
+      { degree: 5, variety: "Major 7th", numeral: "IVmaj7" },
+      { degree: 4, variety: "Minor 7th", numeral: "iii7" },
+      { degree: 2, variety: "Minor 7th", numeral: "ii7" },
+      { degree: 0, variety: "Major 7th", numeral: "Imaj7" }
+    ]
+  },
+  {
+    name: "Royal Road",
+    mood: "Japanese Pop",
+    steps: [
+      { degree: 5, variety: "Major 7th", numeral: "IVmaj7" },
+      { degree: 7, variety: "Dominant 7th", numeral: "V7" },
+      { degree: 4, variety: "Minor 7th", numeral: "iii7" },
+      { degree: 9, variety: "Minor 7th", numeral: "vi7" }
+    ]
+  },
+  {
+    name: "The 12-Bar (Mini)",
+    mood: "Blues",
+    steps: [
+      { degree: 0, variety: "Dominant 7th", numeral: "I7" },
+      { degree: 5, variety: "Dominant 7th", numeral: "IV7" },
+      { degree: 0, variety: "Dominant 7th", numeral: "I7" },
+      { degree: 7, variety: "Dominant 7th", numeral: "V7" }
+    ]
+  },
+  {
+    name: "Dark Descent",
+    mood: "Melancholic",
+    steps: [
+      { degree: 0, variety: "Minor", numeral: "i" },
+      { degree: 8, variety: "Major", numeral: "VI" },
+      { degree: 3, variety: "Major", numeral: "III" },
+      { degree: 10, variety: "Major", numeral: "VII" }
+    ]
+  },
+  {
+    name: "Lydian Bright",
+    mood: "Dreamy",
+    steps: [
+      { degree: 0, variety: "Major", numeral: "I" },
+      { degree: 2, variety: "Major", numeral: "II" },
+      { degree: 5, variety: "Major 7th", numeral: "IVmaj7" },
+      { degree: 0, variety: "Major", numeral: "I" }
+    ]
+  }
+];

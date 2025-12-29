@@ -39,6 +39,12 @@ export interface ProgressionStep {
   numeral: string;
 }
 
+export interface ProgressionTemplate {
+  name: string;
+  mood: string;
+  steps: { degree: number; variety: string; numeral: string }[];
+}
+
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;

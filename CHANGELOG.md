@@ -1,17 +1,28 @@
 # Change Log
 
-## [1.2.0] - Refactor & Debug (Latest)
-- **Refactor**: Cleaned up `FretboardView` SVG coordinate system to support dynamic zoom.
+## [1.4.0] - Template Library (Latest)
+- **Feature**: Added a "Template Library" to the Progression Lab.
+- **Content**: 10 diverse harmonic templates including "The Pop Loop", "Classic ii-V-I", "Andalusian Cadence", and "Smooth Neo-Soul".
+- **Refactor**: Key-agnostic degree mapping allows any template to be applied to all 12 root keys.
+- **UX**: New Template Gallery UI for quick selection and preview.
+
+## [1.3.0] - Refactor & Polish
+- **Refactor**: Decomposed `FretboardView` into manageable sub-components.
+- **Refactor**: Standardized SVG coordinate system with a defined `viewBox`.
+- **Debug**: Fixed SVG marker clipping and arc height calculation.
+- **Polish**: Enhanced the "Muted String" indicator and state synchronization.
+
+## [1.2.0] - Refactor & Debug
+- **Refactor**: Cleaned up `FretboardView` SVG coordinate system.
 - **Feature**: Added "Hammer-on" and "Pull-off" directional animations.
 - **Feature**: Interactive fret highlighting on hover.
-- **Feature**: Zoom functionality (Nut, Mid, High, Full Neck).
-- **Bugfix**: Resolved string indexing mismatch for AI-generated voicings.
-- **UX**: Added pulsed 'X' indicators for muted strings.
+- **Feature**: Zoom functionality.
+- **Bugfix**: String indexing mismatch for AI-generated voicings.
 
 ## [1.1.0] - AI Voicings Update
 - **Feature**: Integrated `suggestChordVoicing` service using Gemini.
-- **Feature**: Added "Ask AI" button in Theory Lab.
-- **Visual**: Added interval-based label mode (1, b3, 5, etc.).
+- **Feature**: Added "Ask AI" button.
+- **Visual**: Added interval-based label mode.
 
 ## [1.0.0] - Initial Release
 - **Core**: Scale and Chord calculation logic.
