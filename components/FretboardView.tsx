@@ -72,6 +72,12 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
     return note;
   };
 
+  const getIntervalCode = (note: string) => {
+    if (!currentTheory) return null;
+    const idx = currentTheory.notes.indexOf(note);
+    return idx !== -1 ? currentTheory.intervals[idx] : null;
+  };
+
   const getXPos = (fret: number) => {
     if (fret < fretRange.start || fret > fretRange.end) return -100;
     const relativeFret = fret - fretRange.start;
@@ -274,13 +280,23 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
                     const isTheoryNote = activeNotes.includes(note);
                     const shapeFret = getShapeNote(stringIdx, fretIdx);
                     const isVoicingNote = shapeFret !== null && shapeFret === fretIdx;
+                    const intervalCode = getIntervalCode(note);
                     
                     if (fretIdx === 0 && !isVoicingNote) return null;
 
                     return (
-                      <div key={fretIdx} className="absolute z-30" style={{ left: `calc(3rem + ${i * fretWidthPercent}%)` }}>
+                      <div key={fretIdx} className="absolute z-30 group -translate-x-1/2" style={{ left: `calc(3rem + ${i * fretWidthPercent}%)` }}>
+                        {/* Tooltip */}
+                        {(isVoicingNote || isTheoryNote) && (
+                          <div className={`absolute ${stringIdx <= 2 ? 'top-full mt-3' : 'bottom-full mb-3'} left-1/2 -translate-x-1/2 px-2.5 py-1.5 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg text-center shadow-[0_10px_20px_rgba(0,0,0,0.5)] z-50 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none min-w-[3.5rem] scale-95 group-hover:scale-100 origin-${stringIdx <= 2 ? 'top' : 'bottom'}`}>
+                            <div className="text-xs font-bold text-white leading-tight mb-0.5">{note}</div>
+                            {intervalCode && <div className="text-[10px] font-medium text-indigo-400 leading-none">{intervalCode}</div>}
+                            <div className={`absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 border-l border-t border-slate-700 rotate-45 ${stringIdx <= 2 ? '-top-1.5 border-b-0 border-r-0' : '-bottom-1.5 border-t-0 border-l-0 border-b border-r'}`}></div>
+                          </div>
+                        )}
+
                         {isVoicingNote ? (
-                           <button className={`-translate-x-1/2 w-8 h-8 rounded-full flex flex-col items-center justify-center text-[10px] font-black shadow-[0_5px_15px_rgba(0,0,0,0.5)] border-2 transition-all hover:scale-125 hover:z-50 select-none cursor-default ${
+                           <button className={`w-8 h-8 rounded-full flex flex-col items-center justify-center text-[10px] font-black shadow-[0_5px_15px_rgba(0,0,0,0.5)] border-2 transition-all hover:scale-125 hover:z-50 select-none cursor-default ${
                              note === rootNote 
                                ? 'bg-indigo-600 border-white text-white ring-4 ring-indigo-500/20' 
                                : 'bg-white border-indigo-500 text-indigo-900 ring-4 ring-white/10'
@@ -288,10 +304,10 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
                              {getLabel(note)}
                            </button>
                         ) : isTheoryNote && !selectedShape && !customAiVoicing ? (
-                           <div className={`-translate-x-1/2 w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all select-none border ${
+                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black transition-all select-none border ${
                              fretIdx === 0 
                                ? 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
-                               : 'bg-slate-800/95 text-slate-400 border-slate-700 group-hover/fretboard:border-slate-600 hover:text-white hover:border-slate-400'
+                               : 'bg-slate-800/95 text-slate-400 border-slate-700 group-hover/fretboard:border-slate-600 hover:text-white hover:border-slate-400 hover:scale-110'
                            }`}>
                              {getLabel(note)}
                            </div>
