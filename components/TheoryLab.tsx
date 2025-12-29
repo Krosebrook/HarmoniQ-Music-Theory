@@ -32,7 +32,7 @@ export const TheoryLab: React.FC<TheoryLabProps> = ({
   const [showTechniques, setShowTechniques] = useState<boolean>(true);
   const [displayLabelMode, setDisplayLabelMode] = useState<'note' | 'interval'>('note');
 
-  // Reset states when core parameters change
+  // Reset states when core parameters change to avoid stale visualizations
   useEffect(() => {
     setSelectedShape('');
     setCustomAiVoicing(null);
@@ -47,9 +47,9 @@ export const TheoryLab: React.FC<TheoryLabProps> = ({
     try {
       const voicing = await suggestChordVoicing(rootNote, selectedVariety);
       setCustomAiVoicing(voicing);
-      setSelectedShape('AI-Suggested'); // Dummy shape label
+      setSelectedShape('AI-Suggested');
     } catch (err) {
-      console.error(err);
+      console.error("AI Voicing Error:", err);
     } finally {
       setIsAiLoading(false);
     }
@@ -96,7 +96,7 @@ export const TheoryLab: React.FC<TheoryLabProps> = ({
                     key={type}
                     onClick={() => {
                       setTheoryType(type);
-                      setSelectedVariety(type === TheoryType.SCALE ? 'Major' : 'Major');
+                      setSelectedVariety('Major');
                     }}
                     className={`flex-1 h-9 rounded-md text-sm font-medium transition-colors ${
                       theoryType === type 
@@ -115,7 +115,7 @@ export const TheoryLab: React.FC<TheoryLabProps> = ({
               <select
                 value={selectedVariety}
                 onChange={(e) => setSelectedVariety(e.target.value)}
-                className="w-full h-10 bg-slate-900 border border-slate-700 rounded-md px-3 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                className="w-full h-10 bg-slate-900 border border-slate-700 rounded-md px-3 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all cursor-pointer"
               >
                 {Object.keys(theoryType === TheoryType.SCALE ? SCALES : CHORDS).map((v) => (
                   <option key={v} value={v}>{v}</option>
@@ -125,7 +125,7 @@ export const TheoryLab: React.FC<TheoryLabProps> = ({
 
             <div className="pt-4 border-t border-slate-700/50 space-y-3">
                <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-400">Labels</label>
+                <label className="text-xs font-medium text-slate-400">Label Mode</label>
                 <div className="flex bg-slate-900 rounded-lg p-1">
                   <button 
                     onClick={() => setDisplayLabelMode('note')}
@@ -143,59 +143,70 @@ export const TheoryLab: React.FC<TheoryLabProps> = ({
               </div>
               
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-slate-400">Slurs</label>
+                <label className="text-xs font-medium text-slate-400">Show Techniques</label>
                 <button 
                   onClick={() => setShowTechniques(!showTechniques)}
                   className={`w-10 h-5 rounded-full transition-colors relative ${showTechniques ? 'bg-indigo-600' : 'bg-slate-700'}`}
                 >
-                  <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${showTechniques ? 'left-6' : 'left-1'}`}></div>
+                  <div className={`absolute top-1 w-3 h-3 rounded-full bg-white shadow-sm transition-all ${showTechniques ? 'left-6' : 'left-1'}`}></div>
                 </button>
               </div>
             </div>
 
             {theoryType === TheoryType.CHORD && (
-              <div className="pt-4 border-t border-slate-700/50">
+              <div className="pt-4 border-t border-slate-700/50 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="flex items-center justify-between mb-3">
-                  <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Voicings</label>
+                  <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Guitar Shapes</label>
                   <button 
-                    onClick={handleGenerateAiVoicing}
-                    disabled={isAiLoading}
-                    className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded border border-indigo-500/20 hover:bg-indigo-500/20 transition-all disabled:opacity-50"
+                    onClick={() => { setSelectedShape(''); setCustomAiVoicing(null); }}
+                    className="text-[9px] font-bold text-slate-500 hover:text-indigo-400 uppercase tracking-tight transition-colors"
                   >
-                    {isAiLoading ? '...' : 'Ask AI ✨'}
+                    Reset View
                   </button>
                 </div>
-                <div className="space-y-1">
-                  <button
-                    onClick={() => { setSelectedShape(''); setCustomAiVoicing(null); }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                      selectedShape === '' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-700/50'
-                    }`}
-                  >
-                    Scale Display
-                  </button>
-                  {customAiVoicing && (
-                    <button
-                      onClick={() => setSelectedShape('AI-Suggested')}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-between ${
-                        selectedShape === 'AI-Suggested' ? 'bg-indigo-600 text-white' : 'bg-indigo-900/20 text-indigo-300 border border-indigo-500/30'
-                      }`}
-                    >
-                      Custom AI Voicing
-                      <span className="text-[10px] opacity-70">✨</span>
-                    </button>
-                  )}
+                
+                <div className="grid grid-cols-2 gap-2 mb-4">
                   {availableShapes.map(shape => (
                     <button
                       key={shape}
                       onClick={() => { setSelectedShape(shape); setCustomAiVoicing(null); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                        selectedShape === shape ? 'bg-indigo-600 text-white shadow-lg' : 'bg-slate-700/30 text-slate-400 hover:bg-slate-700/60'
+                      className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all border text-center ${
+                        selectedShape === shape && !customAiVoicing
+                          ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/20' 
+                          : 'bg-slate-700/30 text-slate-400 border-slate-700 hover:border-slate-600 hover:bg-slate-700/50'
                       }`}
                     >
                       {shape}
                     </button>
                   ))}
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    onClick={handleGenerateAiVoicing}
+                    disabled={isAiLoading}
+                    className="w-full py-2.5 bg-indigo-600/10 hover:bg-indigo-600/20 border border-indigo-500/30 rounded-xl text-[11px] font-bold text-indigo-300 transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+                  >
+                    {isAiLoading ? (
+                      <div className="w-3 h-3 border-2 border-indigo-300/30 border-t-indigo-300 rounded-full animate-spin"></div>
+                    ) : (
+                      <span className="flex items-center gap-2">✨ Ask AI Voicing</span>
+                    )}
+                  </button>
+
+                  {customAiVoicing && (
+                    <button
+                      onClick={() => setSelectedShape('AI-Suggested')}
+                      className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between border ${
+                        selectedShape === 'AI-Suggested' 
+                          ? 'bg-violet-600 text-white border-violet-500 shadow-lg' 
+                          : 'bg-violet-900/20 text-violet-300 border-violet-500/30 hover:bg-violet-900/40'
+                      }`}
+                    >
+                      AI Custom Shape
+                      <div className={`w-2 h-2 rounded-full ${selectedShape === 'AI-Suggested' ? 'bg-white' : 'bg-violet-500'} animate-pulse`}></div>
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -204,7 +215,7 @@ export const TheoryLab: React.FC<TheoryLabProps> = ({
 
         <section className="bg-slate-800/40 border border-slate-700/50 p-6 rounded-2xl shadow-xl">
           <h3 className="text-indigo-400 text-xs font-semibold uppercase tracking-widest mb-4">Step Analysis</h3>
-          <div className="text-2xl font-bold text-white mb-6 leading-tight">{currentTheory.name}</div>
+          <div className="text-2xl font-bold text-white mb-6 leading-tight truncate" title={currentTheory.name}>{currentTheory.name}</div>
           
           <div className="space-y-2.5">
             {currentTheory.notes.map((note, i) => (

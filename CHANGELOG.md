@@ -1,6 +1,12 @@
 # Change Log
 
-## [1.4.0] - Template Library (Latest)
+## [1.5.0] - Guitar Voicing Refactor (Latest)
+- **Feature**: Added a "Guitar Shapes" gallery in the Theory Lab for quick selection of standard CAGED shapes (E-Shape, A-Shape, etc.).
+- **UX**: Improved the "Ask AI" voicing placement and feedback, integrating it into the guitar shape workflow.
+- **Visual**: Added transition animations to the chord voicing section and refined button styles for better clarity between active and inactive shapes.
+- **Bugfix**: Ensured state resets correctly when switching between Scale and Chord modes to prevent stale fretboard overlays.
+
+## [1.4.0] - Template Library
 - **Feature**: Added a "Template Library" to the Progression Lab.
 - **Content**: 10 diverse harmonic templates including "The Pop Loop", "Classic ii-V-I", "Andalusian Cadence", and "Smooth Neo-Soul".
 - **Refactor**: Key-agnostic degree mapping allows any template to be applied to all 12 root keys.
