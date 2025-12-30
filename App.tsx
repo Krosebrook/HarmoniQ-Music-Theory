@@ -1,68 +1,30 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { Suspense, lazy } from 'react';
+import { TheoryProvider, useTheory } from './context/TheoryContext';
 import { TheoryLab } from './components/TheoryLab';
-import { ChatInterface } from './components/ChatInterface';
-import { ImageGenerator } from './components/ImageGenerator';
-import { ProgressionLab } from './components/ProgressionLab';
-import { TheoryResult, NoteName, TheoryType, ProgressionStep } from './types';
-import { NOTES, SCALES, CHORDS } from './constants';
 
-const INTERVAL_MAP: Record<number, string> = {
-  0: 'R', 1: 'b2', 2: '2', 3: 'b3', 4: '3', 5: '4', 6: '#4', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7',
-  12: '8', 13: 'b9', 14: '9', 15: '#9', 16: '10', 17: '11', 18: '#11', 19: '12', 20: 'b13', 21: '13'
-};
+const ProgressionLab = lazy(() => import('./components/ProgressionLab').then(m => ({ default: m.ProgressionLab })));
+const ChatInterface = lazy(() => import('./components/ChatInterface').then(m => ({ default: m.ChatInterface })));
+const ImageGenerator = lazy(() => import('./components/ImageGenerator').then(m => ({ default: m.ImageGenerator })));
 
-const App: React.FC = () => {
-  const [rootNote, setRootNote] = useState<NoteName>(NoteName.C);
-  const [theoryType, setTheoryType] = useState<TheoryType>(TheoryType.SCALE);
-  const [selectedVariety, setSelectedVariety] = useState<string>('Major');
-  const [activeTab, setActiveTab] = useState<'theory' | 'progression' | 'chat' | 'art'>('theory');
-  
-  const [activeProgressionStep, setActiveProgressionStep] = useState<number>(0);
-  const [progression, setProgression] = useState<ProgressionStep[]>([]);
+const AppContent: React.FC = () => {
+  const { activeTab, setActiveTab, instrument, setInstrument, volume, setVolume } = useTheory();
 
-  const calculateTheory = useCallback((): TheoryResult => {
-    const rootIndex = NOTES.indexOf(rootNote);
-    const semitones = theoryType === TheoryType.SCALE 
-      ? SCALES[selectedVariety as keyof typeof SCALES] 
-      : CHORDS[selectedVariety as keyof typeof CHORDS];
-    
-    const notes = semitones.map(s => {
-      const idx = (rootIndex + s) % 12;
-      return NOTES[idx];
-    });
-
-    const intervals = semitones.map(s => INTERVAL_MAP[s] || s.toString());
-
-    return {
-      notes,
-      intervals,
-      name: `${rootNote} ${selectedVariety}`
-    };
-  }, [rootNote, theoryType, selectedVariety]);
-
-  const [currentTheory, setCurrentTheory] = useState<TheoryResult>(calculateTheory());
-
-  useEffect(() => {
-    setCurrentTheory(calculateTheory());
-  }, [calculateTheory]);
-
-  const handleProgressionSelect = (step: ProgressionStep, index: number) => {
-    setTheoryType(TheoryType.CHORD);
-    setRootNote(step.root);
-    setSelectedVariety(step.variety);
-    setActiveProgressionStep(index);
-    setActiveTab('theory');
-  };
+  const LoadingFallback = () => (
+    <div className="flex flex-col items-center justify-center h-64 space-y-4">
+      <div className="w-12 h-12 border-4 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin"></div>
+      <p className="text-slate-500 text-sm font-medium animate-pulse">Loading Workspace...</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">H</div>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl flex items-center justify-center font-black text-white shadow-xl shadow-indigo-500/20">H</div>
             <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-              HarmoniQ
+              HarmoniQ <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded ml-2 align-middle">PRO</span>
             </h1>
           </div>
           
@@ -81,45 +43,56 @@ const App: React.FC = () => {
               </button>
             ))}
           </nav>
+
+          <div className="hidden md:flex items-center gap-4 pl-4 border-l border-slate-800">
+            <div className="flex bg-slate-800 rounded-lg p-1">
+              <button 
+                onClick={() => setInstrument('piano')}
+                className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${instrument === 'piano' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`}
+              >
+                Piano
+              </button>
+              <button 
+                onClick={() => setInstrument('guitar')}
+                className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${instrument === 'guitar' ? 'bg-indigo-600 text-white' : 'text-slate-500'}`}
+              >
+                Guitar
+              </button>
+            </div>
+            <input 
+              type="range" min="0" max="1" step="0.1" 
+              value={volume} 
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              className="w-20 accent-indigo-500 h-1 bg-slate-700 rounded-full appearance-none cursor-pointer"
+            />
+          </div>
         </div>
       </header>
 
       <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-6 lg:p-8">
-        {activeTab === 'theory' && (
-          <TheoryLab 
-            rootNote={rootNote}
-            setRootNote={setRootNote}
-            theoryType={theoryType}
-            setTheoryType={setTheoryType}
-            selectedVariety={selectedVariety}
-            setSelectedVariety={setSelectedVariety}
-            currentTheory={currentTheory}
-          />
-        )}
-
-        {activeTab === 'progression' && (
-          <ProgressionLab 
-            currentKey={rootNote}
-            onSelectChord={handleProgressionSelect}
-            progression={progression}
-            setProgression={setProgression}
-          />
-        )}
-        
-        {activeTab === 'chat' && (
-          <ChatInterface />
-        )}
-
-        {activeTab === 'art' && (
-          <ImageGenerator />
-        )}
+        <Suspense fallback={<LoadingFallback />}>
+          {activeTab === 'theory' && <TheoryLab />}
+          {activeTab === 'progression' && <ProgressionLab />}
+          {activeTab === 'chat' && <ChatInterface />}
+          {activeTab === 'art' && <ImageGenerator />}
+        </Suspense>
       </main>
 
-      <footer className="border-t border-slate-800 p-4 text-center text-slate-500 text-sm">
-        Built with Gemini 3 Pro • Advanced Music Theory Visualizer
+      <footer className="border-t border-slate-800 p-6 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-500 text-xs">
+        <div>© 2025 HarmoniQ Music Theory Lab • v1.6.0-PWA</div>
+        <div className="flex gap-4">
+          <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Audio System Ready</span>
+          <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Gemini 3 Online</span>
+        </div>
       </footer>
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <TheoryProvider>
+    <AppContent />
+  </TheoryProvider>
+);
 
 export default App;

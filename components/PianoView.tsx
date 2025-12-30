@@ -2,6 +2,8 @@
 import React, { useMemo } from 'react';
 import { NOTES } from '../constants';
 import { TheoryResult } from '../types';
+import { useAudio } from '../hooks/useAudio';
+import { useTheory } from '../context/TheoryContext';
 
 interface PianoViewProps {
   activeNotes: string[];
@@ -16,6 +18,9 @@ export const PianoView: React.FC<PianoViewProps> = ({
   displayLabelMode = 'note',
   currentTheory
 }) => {
+  const { instrument, volume } = useTheory();
+  const { playNote } = useAudio(instrument, volume);
+
   const keys = useMemo(() => {
     const octaves = 2;
     const result = [];
@@ -42,7 +47,7 @@ export const PianoView: React.FC<PianoViewProps> = ({
   };
 
   return (
-    <div className="relative h-48 min-w-[600px] flex pb-8">
+    <div className="relative h-48 min-w-[600px] flex pb-8 select-none">
       {keys.map((k, idx) => {
         const isActive = activeNotes.includes(k.note);
         const isVoiced = isPrimaryVoicing(k.note, k.octave);
@@ -51,7 +56,8 @@ export const PianoView: React.FC<PianoViewProps> = ({
           return (
             <div
               key={`${k.note}-${idx}`}
-              className={`absolute z-10 w-8 h-28 -ml-4 rounded-b-md border border-slate-900 transition-all duration-300 ${
+              onClick={() => playNote(k.note, k.octave)}
+              className={`absolute z-10 w-8 h-28 -ml-4 rounded-b-md border border-slate-900 transition-all duration-300 cursor-pointer active:scale-y-90 active:bg-indigo-400 ${
                 isVoiced 
                   ? 'bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-300 scale-y-105' 
                   : isActive 
@@ -72,7 +78,8 @@ export const PianoView: React.FC<PianoViewProps> = ({
         return (
           <div
             key={`${k.note}-${idx}`}
-            className={`w-12 h-48 border border-slate-700/50 rounded-b-lg transition-all duration-300 flex flex-col justify-end ${
+            onClick={() => playNote(k.note, k.octave)}
+            className={`w-12 h-48 border border-slate-700/50 rounded-b-lg transition-all duration-300 flex flex-col justify-end cursor-pointer active:bg-indigo-100 active:border-indigo-400 ${
               isVoiced 
                 ? 'bg-indigo-50 border-indigo-500 shadow-inner' 
                 : isActive 
@@ -82,7 +89,7 @@ export const PianoView: React.FC<PianoViewProps> = ({
             title={k.note}
           >
             {isActive && (
-              <div className="pb-4 flex flex-col items-center">
+              <div className="pb-4 flex flex-col items-center pointer-events-none">
                 <div className={`w-2.5 h-2.5 rounded-full mb-2 ${isVoiced ? 'bg-indigo-600 animate-pulse' : 'bg-indigo-300'}`}></div>
                 <div className={`text-xs font-black uppercase ${isVoiced ? 'text-indigo-900' : 'text-indigo-400'}`}>
                   {getLabel(k.note)}
