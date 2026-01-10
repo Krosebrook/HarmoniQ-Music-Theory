@@ -49,3 +49,21 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
 }
+
+// Ear Training Types
+export type QuizMode = 'interval' | 'chord';
+
+export interface QuizStats {
+  correct: number;
+  total: number;
+  streak: number;
+  bestStreak: number;
+}
+
+export interface QuizQuestion {
+  type: QuizMode;
+  root: string;
+  notes: string[]; // Actual notes to play
+  correctAnswer: string; // The label (e.g., "Major 3rd" or "Minor")
+  options: string[]; // Multiple choice options
+}

@@ -110,6 +110,15 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
 
   return (
     <div className="space-y-6 select-none" role="region" aria-label="Interactive Guitar Fretboard">
+      <style>{`
+        @keyframes dashflow {
+          to { stroke-dashoffset: -20; }
+        }
+        .animate-flow {
+          animation: dashflow 1s linear infinite;
+        }
+      `}</style>
+
       {/* Zoom & Range Controls */}
       <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 shadow-xl flex flex-col gap-6">
         <div className="flex flex-wrap gap-2 items-center justify-between">
@@ -224,6 +233,19 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
               const reversedIdx = 5 - stringIdx;
               const isMuted = activeVoicing && activeVoicing[reversedIdx] === null;
 
+              // Calculate active notes for this string for arc rendering
+              const activeFretIndices = Array.from({ length: visibleFrets })
+                .map((_, i) => startFret + i)
+                .filter(fretIdx => {
+                  if (activeVoicing) {
+                    const shapeFret = getShapeNote(stringIdx, fretIdx);
+                    return shapeFret === fretIdx;
+                  }
+                  const note = getNoteAt(s, fretIdx);
+                  return activeNotes.includes(note);
+                })
+                .sort((a, b) => a - b);
+
               return (
                 <div key={stringIdx} className="relative h-0 flex items-center">
                   
@@ -245,6 +267,51 @@ export const FretboardView: React.FC<FretboardViewProps> = ({
                       opacity: isMuted ? 0.15 : 1
                     }}
                   ></div>
+
+                  {/* Hammer-on / Legato Arcs Layer */}
+                  <div className="absolute left-14 right-0 h-10 -top-5 pointer-events-none z-20">
+                    <svg className="w-full h-full overflow-visible">
+                      <defs>
+                         <linearGradient id={`arc-grad-${stringIdx}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="rgba(99, 102, 241, 0.1)" />
+                            <stop offset="50%" stopColor="rgba(99, 102, 241, 0.8)" />
+                            <stop offset="100%" stopColor="rgba(99, 102, 241, 0.1)" />
+                         </linearGradient>
+                      </defs>
+                      {activeFretIndices.map((fret, i) => {
+                        if (i === activeFretIndices.length - 1) return null;
+                        const nextFret = activeFretIndices[i + 1];
+                        if (nextFret - fret > 4) return null; // Only connect if within reach
+
+                        const startPerc = getPositionPercent(fret - startFret, true);
+                        const endPerc = getPositionPercent(nextFret - startFret, true);
+                        
+                        return (
+                          <g key={`arc-${fret}-${nextFret}`}>
+                            {/* Glow Effect */}
+                            <path
+                              d={`M ${startPerc}% 50 Q ${(startPerc + endPerc)/2}% 0 ${endPerc}% 50`}
+                              fill="none"
+                              stroke={`url(#arc-grad-${stringIdx})`}
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                              className="opacity-40 blur-[2px]"
+                            />
+                            {/* Animated Dash Line */}
+                            <path
+                              d={`M ${startPerc}% 50 Q ${(startPerc + endPerc)/2}% 0 ${endPerc}% 50`}
+                              fill="none"
+                              stroke="rgba(165, 180, 252, 0.8)"
+                              strokeWidth="1.5"
+                              strokeLinecap="round"
+                              strokeDasharray="4 4"
+                              className="animate-flow"
+                            />
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
                   
                   {Array.from({ length: visibleFrets }).map((_, i) => {
                     const fretIdx = startFret + i;

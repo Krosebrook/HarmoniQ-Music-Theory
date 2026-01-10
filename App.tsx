@@ -6,6 +6,7 @@ import { TheoryLab } from './components/TheoryLab';
 const ProgressionLab = lazy(() => import('./components/ProgressionLab').then(m => ({ default: m.ProgressionLab })));
 const ChatInterface = lazy(() => import('./components/ChatInterface').then(m => ({ default: m.ChatInterface })));
 const ImageGenerator = lazy(() => import('./components/ImageGenerator').then(m => ({ default: m.ImageGenerator })));
+const EarTrainingLab = lazy(() => import('./components/EarTrainingLab').then(m => ({ default: m.EarTrainingLab })));
 
 const AppContent: React.FC = () => {
   const { activeTab, setActiveTab, instrument, setInstrument, volume, setVolume } = useTheory();
@@ -28,12 +29,12 @@ const AppContent: React.FC = () => {
             </h1>
           </div>
           
-          <nav className="flex gap-1 bg-slate-800/50 p-1 rounded-xl">
-            {(['theory', 'progression', 'chat', 'art'] as const).map((tab) => (
+          <nav className="flex gap-1 bg-slate-800/50 p-1 rounded-xl overflow-x-auto scrollbar-none">
+            {(['theory', 'progression', 'practice', 'chat', 'art'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
                   activeTab === tab 
                     ? 'bg-slate-700 text-white shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/30'
@@ -73,13 +74,14 @@ const AppContent: React.FC = () => {
         <Suspense fallback={<LoadingFallback />}>
           {activeTab === 'theory' && <TheoryLab />}
           {activeTab === 'progression' && <ProgressionLab />}
+          {activeTab === 'practice' && <EarTrainingLab />}
           {activeTab === 'chat' && <ChatInterface />}
           {activeTab === 'art' && <ImageGenerator />}
         </Suspense>
       </main>
 
       <footer className="border-t border-slate-800 p-6 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-500 text-xs">
-        <div>© 2025 HarmoniQ Music Theory Lab • v1.6.0-PWA</div>
+        <div>© 2025 HarmoniQ Music Theory Lab • v1.7.0-PWA</div>
         <div className="flex gap-4">
           <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Audio System Ready</span>
           <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div> Gemini 3 Online</span>

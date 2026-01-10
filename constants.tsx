@@ -3,6 +3,21 @@ import { ProgressionTemplate } from './types';
 
 export const NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
+export const INTERVALS = [
+  { label: 'Minor 2nd', semitones: 1 },
+  { label: 'Major 2nd', semitones: 2 },
+  { label: 'Minor 3rd', semitones: 3 },
+  { label: 'Major 3rd', semitones: 4 },
+  { label: 'Perfect 4th', semitones: 5 },
+  { label: 'Tritone', semitones: 6 },
+  { label: 'Perfect 5th', semitones: 7 },
+  { label: 'Minor 6th', semitones: 8 },
+  { label: 'Major 6th', semitones: 9 },
+  { label: 'Minor 7th', semitones: 10 },
+  { label: 'Major 7th', semitones: 11 },
+  { label: 'Octave', semitones: 12 }
+];
+
 export const SCALES = {
   'Major': [0, 2, 4, 5, 7, 9, 11],
   'Natural Minor': [0, 2, 3, 5, 7, 8, 10],
