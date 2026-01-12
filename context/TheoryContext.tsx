@@ -1,7 +1,6 @@
-
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { TheoryResult, NoteName, TheoryType, ProgressionStep } from '../types';
-import { NOTES, SCALES, CHORDS } from '../constants';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { TheoryResult, NoteName, TheoryType, ProgressionStep, DiatonicChord } from '../types';
+import { NOTES, SCALES, CHORDS, INTERVAL_MAP, DIATONIC_QUALITIES } from '../constants';
 
 interface TheoryContextType {
   rootNote: NoteName;
@@ -19,17 +18,16 @@ interface TheoryContextType {
   setInstrument: (i: 'piano' | 'guitar') => void;
   volume: number;
   setVolume: (v: number) => void;
+  // Reverse Lookup State
+  isLookupMode: boolean;
+  setIsLookupMode: (b: boolean) => void;
+  manualNotes: string[];
+  setManualNotes: (notes: string[]) => void;
 }
-
-const INTERVAL_MAP: Record<number, string> = {
-  0: 'R', 1: 'b2', 2: '2', 3: 'b3', 4: '3', 5: '4', 6: '#4', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7',
-  12: '8', 13: 'b9', 14: '9', 15: '#9', 16: '10', 17: '11', 18: '#11', 19: '12', 20: 'b13', 21: '13'
-};
 
 const TheoryContext = createContext<TheoryContextType | undefined>(undefined);
 
 export const TheoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Persistence Loading
   const savedState = useMemo(() => {
     const data = localStorage.getItem('harmoniq_settings');
     return data ? JSON.parse(data) : {};
@@ -42,6 +40,10 @@ export const TheoryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [progression, setProgression] = useState<ProgressionStep[]>([]);
   const [instrument, setInstrument] = useState<'piano' | 'guitar'>(savedState.instrument || 'piano');
   const [volume, setVolume] = useState<number>(savedState.volume ?? 0.5);
+
+  // Lookup mode
+  const [isLookupMode, setIsLookupMode] = useState(false);
+  const [manualNotes, setManualNotes] = useState<string[]>([]);
 
   const currentTheory = useMemo(() => {
     const rootIndex = NOTES.indexOf(rootNote);
@@ -56,14 +58,34 @@ export const TheoryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const intervals = semitones.map(s => INTERVAL_MAP[s] || s.toString());
 
+    let diatonicChords: DiatonicChord[] = [];
+    if (theoryType === TheoryType.SCALE && (selectedVariety === 'Major' || selectedVariety === 'Natural Minor')) {
+      const qualities = DIATONIC_QUALITIES[selectedVariety];
+      diatonicChords = notes.map((note, i) => {
+        const quality = qualities[i];
+        if (!quality) return null;
+        
+        const chordRootIdx = NOTES.indexOf(note);
+        const chordSemitones = CHORDS[quality.seventh as keyof typeof CHORDS];
+        const chordNotes = chordSemitones.map(s => NOTES[(chordRootIdx + s) % 12]);
+        
+        return {
+          root: note,
+          variety: quality.seventh,
+          numeral: quality.numeral,
+          notes: chordNotes
+        };
+      }).filter((c): c is DiatonicChord => c !== null);
+    }
+
     return {
       notes,
       intervals,
-      name: `${rootNote} ${selectedVariety}`
+      name: `${rootNote} ${selectedVariety}`,
+      diatonicChords
     };
   }, [rootNote, theoryType, selectedVariety]);
 
-  // Persist settings
   useEffect(() => {
     localStorage.setItem('harmoniq_settings', JSON.stringify({
       rootNote, theoryType, selectedVariety, activeTab, instrument, volume
@@ -79,7 +101,9 @@ export const TheoryProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       activeTab, setActiveTab,
       progression, setProgression,
       instrument, setInstrument,
-      volume, setVolume
+      volume, setVolume,
+      isLookupMode, setIsLookupMode,
+      manualNotes, setManualNotes
     }}>
       {children}
     </TheoryContext.Provider>

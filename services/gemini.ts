@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 import { ImageSize, ProgressionStep } from "../types";
 
@@ -10,6 +9,37 @@ export const getGeminiChat = () => {
       systemInstruction: "You are a world-class music theory professor. You explain complex concepts like microtonality, complex polyrhythms, and jazz functional harmony in an engaging, accessible way. Always provide examples in your explanations.",
     },
   });
+};
+
+export const lookupScales = async (notes: string[]): Promise<{ scale: string; reasoning: string }[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Identify the most likely musical scales or modes that contain exactly these notes: [${notes.join(', ')}]. Provide the scale name and a very brief reasoning for why it fits. Return JSON only.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          results: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                scale: { type: Type.STRING },
+                reasoning: { type: Type.STRING }
+              },
+              required: ["scale", "reasoning"]
+            }
+          }
+        },
+        required: ["results"]
+      }
+    }
+  });
+
+  const data = JSON.parse(response.text);
+  return data.results;
 };
 
 export const suggestProgression = async (mood: string, key: string): Promise<ProgressionStep[]> => {
@@ -30,6 +60,40 @@ export const suggestProgression = async (mood: string, key: string): Promise<Pro
                 root: { type: Type.STRING, description: "The root note, e.g., C, Eb" },
                 variety: { type: Type.STRING, description: "The chord type, e.g., Minor 7th" },
                 numeral: { type: Type.STRING, description: "The Roman numeral analysis, e.g., ii7" }
+              },
+              required: ["root", "variety", "numeral"]
+            }
+          }
+        },
+        required: ["progression"]
+      }
+    }
+  });
+
+  const data = JSON.parse(response.text);
+  return data.progression;
+};
+
+export const reharmonizeProgression = async (currentProgression: ProgressionStep[], key: string): Promise<ProgressionStep[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const progStr = currentProgression.map(p => `${p.root} ${p.variety}`).join(', ');
+  
+  const response = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: `Re-harmonize the following chord progression in the key of ${key} to make it more sophisticated (use jazz extensions, tritone substitutions, or secondary dominants where appropriate). Original: [${progStr}]. Return exactly 4 chords in JSON format with 'root', 'variety', and 'numeral'.`,
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          progression: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                root: { type: Type.STRING },
+                variety: { type: Type.STRING },
+                numeral: { type: Type.STRING }
               },
               required: ["root", "variety", "numeral"]
             }

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { NOTES } from '../constants';
 import { TheoryResult } from '../types';
@@ -18,7 +17,7 @@ export const PianoView: React.FC<PianoViewProps> = ({
   displayLabelMode = 'note',
   currentTheory
 }) => {
-  const { instrument, volume } = useTheory();
+  const { instrument, volume, isLookupMode, manualNotes, setManualNotes } = useTheory();
   const { playNote } = useAudio(instrument, volume);
 
   const keys = useMemo(() => {
@@ -33,6 +32,17 @@ export const PianoView: React.FC<PianoViewProps> = ({
     return result;
   }, []);
 
+  const handleKeyClick = (note: string, octave: number) => {
+    playNote(note, octave);
+    if (isLookupMode) {
+      if (manualNotes.includes(note)) {
+        setManualNotes(manualNotes.filter(n => n !== note));
+      } else {
+        setManualNotes([...manualNotes, note]);
+      }
+    }
+  };
+
   const getLabel = (note: string) => {
     if (displayLabelMode === 'interval' && currentTheory) {
       const idx = currentTheory.notes.indexOf(note);
@@ -42,7 +52,7 @@ export const PianoView: React.FC<PianoViewProps> = ({
   };
 
   const isPrimaryVoicing = (note: string, octave: number) => {
-    if (!isChordMode) return false;
+    if (!isChordMode || isLookupMode) return false;
     return octave === 0 && activeNotes.includes(note);
   };
 
@@ -56,12 +66,12 @@ export const PianoView: React.FC<PianoViewProps> = ({
           return (
             <div
               key={`${k.note}-${idx}`}
-              onClick={() => playNote(k.note, k.octave)}
+              onClick={() => handleKeyClick(k.note, k.octave)}
               className={`absolute z-10 w-8 h-28 -ml-4 rounded-b-md border border-slate-900 transition-all duration-300 cursor-pointer active:scale-y-90 active:bg-indigo-400 ${
                 isVoiced 
                   ? 'bg-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.6)] border-indigo-300 scale-y-105' 
                   : isActive 
-                    ? 'bg-indigo-900/80 border-indigo-700' 
+                    ? isLookupMode ? 'bg-amber-600 border-amber-400' : 'bg-indigo-900/80 border-indigo-700' 
                     : 'bg-slate-950 hover:bg-slate-900'
               }`}
               style={{ left: `${(idx - (idx > 12 ? 1 : 0)) * 42}px` }}
@@ -78,20 +88,20 @@ export const PianoView: React.FC<PianoViewProps> = ({
         return (
           <div
             key={`${k.note}-${idx}`}
-            onClick={() => playNote(k.note, k.octave)}
+            onClick={() => handleKeyClick(k.note, k.octave)}
             className={`w-12 h-48 border border-slate-700/50 rounded-b-lg transition-all duration-300 flex flex-col justify-end cursor-pointer active:bg-indigo-100 active:border-indigo-400 ${
               isVoiced 
                 ? 'bg-indigo-50 border-indigo-500 shadow-inner' 
                 : isActive 
-                  ? 'bg-indigo-400/20 border-indigo-400' 
+                  ? isLookupMode ? 'bg-amber-400/20 border-amber-500' : 'bg-indigo-400/20 border-indigo-400' 
                   : 'bg-white hover:bg-slate-100'
             }`}
             title={k.note}
           >
             {isActive && (
               <div className="pb-4 flex flex-col items-center pointer-events-none">
-                <div className={`w-2.5 h-2.5 rounded-full mb-2 ${isVoiced ? 'bg-indigo-600 animate-pulse' : 'bg-indigo-300'}`}></div>
-                <div className={`text-xs font-black uppercase ${isVoiced ? 'text-indigo-900' : 'text-indigo-400'}`}>
+                <div className={`w-2.5 h-2.5 rounded-full mb-2 ${isVoiced ? 'bg-indigo-600 animate-pulse' : isLookupMode ? 'bg-amber-500' : 'bg-indigo-300'}`}></div>
+                <div className={`text-xs font-black uppercase ${isVoiced ? 'text-indigo-900' : isLookupMode ? 'text-amber-600' : 'text-indigo-400'}`}>
                   {getLabel(k.note)}
                 </div>
               </div>

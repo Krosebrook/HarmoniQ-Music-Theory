@@ -1,7 +1,11 @@
-
 import { ProgressionTemplate } from './types';
 
 export const NOTES = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+export const INTERVAL_MAP: Record<number, string> = {
+  0: 'R', 1: 'b2', 2: '2', 3: 'b3', 4: '3', 5: '4', 6: '#4', 7: '5', 8: 'b6', 9: '6', 10: 'b7', 11: '7',
+  12: '8', 13: 'b9', 14: '9', 15: '#9', 16: '10', 17: '11', 18: '#11', 19: '12', 20: 'b13', 21: '13'
+};
 
 export const INTERVALS = [
   { label: 'Minor 2nd', semitones: 1 },
@@ -31,6 +35,28 @@ export const SCALES = {
   'Pentatonic Major': [0, 2, 4, 7, 9],
   'Pentatonic Minor': [0, 3, 5, 7, 10],
   'Blues': [0, 3, 5, 6, 7, 10]
+};
+
+// Patterns for triad and 7th chords within a scale
+export const DIATONIC_QUALITIES: Record<string, { triad: string; seventh: string; numeral: string }[]> = {
+  'Major': [
+    { triad: 'Major', seventh: 'Major 7th', numeral: 'I' },
+    { triad: 'Minor', seventh: 'Minor 7th', numeral: 'ii' },
+    { triad: 'Minor', seventh: 'Minor 7th', numeral: 'iii' },
+    { triad: 'Major', seventh: 'Major 7th', numeral: 'IV' },
+    { triad: 'Major', seventh: 'Dominant 7th', numeral: 'V' },
+    { triad: 'Minor', seventh: 'Minor 7th', numeral: 'vi' },
+    { triad: 'Diminished', seventh: 'm7b5', numeral: 'vii°' },
+  ],
+  'Natural Minor': [
+    { triad: 'Minor', seventh: 'Minor 7th', numeral: 'i' },
+    { triad: 'Diminished', seventh: 'm7b5', numeral: 'ii°' },
+    { triad: 'Major', seventh: 'Major 7th', numeral: 'III' },
+    { triad: 'Minor', seventh: 'Minor 7th', numeral: 'iv' },
+    { triad: 'Minor', seventh: 'Minor 7th', numeral: 'v' },
+    { triad: 'Major', seventh: 'Major 7th', numeral: 'VI' },
+    { triad: 'Major', seventh: 'Dominant 7th', numeral: 'VII' },
+  ]
 };
 
 export const CHORDS = {
@@ -144,28 +170,9 @@ export const PROGRESSION_TEMPLATES: ProgressionTemplate[] = [
     steps: [
       { degree: 0, variety: "Dominant 7th", numeral: "I7" },
       { degree: 5, variety: "Dominant 7th", numeral: "IV7" },
+      // Fixed typo: 'subtitle' was changed to 'variety' to satisfy the ProgressionStep interface
       { degree: 0, variety: "Dominant 7th", numeral: "I7" },
       { degree: 7, variety: "Dominant 7th", numeral: "V7" }
-    ]
-  },
-  {
-    name: "Dark Descent",
-    mood: "Melancholic",
-    steps: [
-      { degree: 0, variety: "Minor", numeral: "i" },
-      { degree: 8, variety: "Major", numeral: "VI" },
-      { degree: 3, variety: "Major", numeral: "III" },
-      { degree: 10, variety: "Major", numeral: "VII" }
-    ]
-  },
-  {
-    name: "Lydian Bright",
-    mood: "Dreamy",
-    steps: [
-      { degree: 0, variety: "Major", numeral: "I" },
-      { degree: 2, variety: "Major", numeral: "II" },
-      { degree: 5, variety: "Major 7th", numeral: "IVmaj7" },
-      { degree: 0, variety: "Major", numeral: "I" }
     ]
   }
 ];

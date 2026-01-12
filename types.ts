@@ -1,4 +1,3 @@
-
 export enum NoteName {
   C = 'C',
   Db = 'Db',
@@ -26,11 +25,19 @@ export enum ImageSize {
   SIZE_4K = '4K'
 }
 
+export interface DiatonicChord {
+  root: string;
+  variety: string;
+  numeral: string;
+  notes: string[];
+}
+
 export interface TheoryResult {
   notes: string[];
   intervals: string[];
   name: string;
   numeral?: string;
+  diatonicChords?: DiatonicChord[];
 }
 
 export interface ProgressionStep {
